@@ -40,7 +40,7 @@ coxph_results <- with(
   MatchThem::pool() |> 
   broom::tidy(exponentiate = TRUE, conf.int = TRUE)
 
-# svycoxph result =>
+# svycoxph result => ?
 svycoxph_results <- with(
   data = data_matched,
   expr = survey::svycoxph(formula = survival::Surv(time, status) ~ exposure)
@@ -48,6 +48,4 @@ svycoxph_results <- with(
   MatchThem::pool() |> 
   broom::tidy(exponentiate = TRUE, conf.int = TRUE)
 
-#data_matched_long <- mice::complete(data = data_matched, action = "long")
-#svy_design <- survey::svydesign(data = data_matched_long)
 
