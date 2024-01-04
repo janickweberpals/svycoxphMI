@@ -63,7 +63,9 @@ data_matched <- matchthem(
 
 We now want to compare treatment effect estimates for `exposure` when
 computed (a) using `coxph` (survival package) and (b) `svycoxph` (survey
-package).
+package). More information on estimating treatment effects after
+matching/weighting is explained in
+<https://kosukeimai.github.io/MatchIt/articles/estimating-effects.html#survival-outcomes>
 
 \(a\) `coxph`
 
@@ -71,7 +73,9 @@ package).
 # coxph result
 coxph_results <- with(
   data = data_matched,
-  expr = coxph(formula = Surv(time, status) ~ exposure, robust = TRUE)
+  expr = coxph(formula = Surv(time, status) ~ exposure, 
+               weights = weights, 
+               robust = TRUE)
   ) |> 
   pool() |> 
   tidy(exponentiate = TRUE) |> 
@@ -83,13 +87,15 @@ coxph_results
           term estimate std.error
     1 exposure 1.069502 0.1906643
 
-\(b\) `svycoxph` =\> leads to an error
+\(b\) `svycoxph`
 
 ``` r
 # coxph result
 svycoxph_results <- with(
   data = data_matched,
-  expr = svycoxph(formula = Surv(time, status) ~ exposure)
+  expr = svycoxph(formula = Surv(time, status) ~ exposure),
+  weights = weights, 
+  robust = TRUE
   ) |> 
   pool() |> 
   tidy(exponentiate = TRUE, conf.int = TRUE) |> 
