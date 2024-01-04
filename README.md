@@ -25,17 +25,17 @@ Create example dataset:
 set.seed(42)
 data_miss <- survival::lung |> 
   # randomly assign an exposure
-  dplyr::mutate(exposure = rbinom(prob = 0.3, size = 1, n = nrow(survival::lung))) |> 
+  mutate(exposure = rbinom(prob = 0.3, size = 1, n = nrow(survival::lung))) |> 
   # create an id variable
-  dplyr::mutate(id = paste0("ID", seq(1, nrow(survival::lung), 1)))
+  mutate(id = paste0("ID", seq(1, nrow(survival::lung), 1)))
 ```
 
 Multiple imputation using `mice:`
 
 ``` r
 # impute data
-data_imp <- mice::mice(
-  data = data_miss |> dplyr::select(-id),
+data_imp <- mice(
+  data = data_miss |> select(-id),
   m = 10,
   seed = 42,
   print = FALSE
@@ -47,14 +47,14 @@ dataset:
 
 ``` r
 # apply propensity score matching on mids object
-data_matched <- MatchThem::matchthem(
+data_matched <- matchthem(
   exposure ~ age + sex,
   datasets = data_imp,
   approach = 'within',
   method = 'nearest',
   caliper = 0.2,
   ratio = 1,
-  replace = T
+  replace = F
   )
 ```
 
@@ -71,17 +71,17 @@ package).
 # coxph result
 coxph_results <- with(
   data = data_matched,
-  expr = survival::coxph(formula = survival::Surv(time, status) ~ exposure, robust = TRUE)
+  expr = coxph(formula = Surv(time, status) ~ exposure, robust = TRUE)
   ) |> 
-  MatchThem::pool() |> 
-  broom::tidy(exponentiate = TRUE) |> 
-  dplyr::select(term, estimate, std.error, p.value)
+  pool() |> 
+  tidy(exponentiate = TRUE) |> 
+  select(term, estimate, std.error)
 
 coxph_results
 ```
 
-          term estimate std.error  p.value
-    1 exposure 1.402722 0.2658144 0.206325
+          term estimate std.error
+    1 exposure 1.069502 0.1906643
 
 \(b\) `svycoxph` =\> leads to an error
 
@@ -89,8 +89,53 @@ coxph_results
 # coxph result
 svycoxph_results <- with(
   data = data_matched,
-  expr = survey::svycoxph(formula = survival::Surv(time, status) ~ exposure)
+  expr = svycoxph(formula = Surv(time, status) ~ exposure)
   ) |> 
-  MatchThem::pool() |> 
-  broom::tidy(exponentiate = TRUE, conf.int = TRUE)
+  pool() |> 
+  tidy(exponentiate = TRUE, conf.int = TRUE) |> 
+  select(term, estimate, std.error)
 ```
+
+    1 - level Cluster Sampling design (with replacement)
+    With (76) clusters.
+    survey::svydesign(ids = ~subclass, weights = ~weights, data = m.data.i)
+    1 - level Cluster Sampling design (with replacement)
+    With (76) clusters.
+    survey::svydesign(ids = ~subclass, weights = ~weights, data = m.data.i)
+    1 - level Cluster Sampling design (with replacement)
+    With (76) clusters.
+    survey::svydesign(ids = ~subclass, weights = ~weights, data = m.data.i)
+    1 - level Cluster Sampling design (with replacement)
+    With (76) clusters.
+    survey::svydesign(ids = ~subclass, weights = ~weights, data = m.data.i)
+    1 - level Cluster Sampling design (with replacement)
+    With (76) clusters.
+    survey::svydesign(ids = ~subclass, weights = ~weights, data = m.data.i)
+    1 - level Cluster Sampling design (with replacement)
+    With (76) clusters.
+    survey::svydesign(ids = ~subclass, weights = ~weights, data = m.data.i)
+    1 - level Cluster Sampling design (with replacement)
+    With (76) clusters.
+    survey::svydesign(ids = ~subclass, weights = ~weights, data = m.data.i)
+    1 - level Cluster Sampling design (with replacement)
+    With (76) clusters.
+    survey::svydesign(ids = ~subclass, weights = ~weights, data = m.data.i)
+    1 - level Cluster Sampling design (with replacement)
+    With (76) clusters.
+    survey::svydesign(ids = ~subclass, weights = ~weights, data = m.data.i)
+    1 - level Cluster Sampling design (with replacement)
+    With (76) clusters.
+    survey::svydesign(ids = ~subclass, weights = ~weights, data = m.data.i)
+    1 - level Cluster Sampling design (with replacement)
+    With (76) clusters.
+    survey::svydesign(ids = ~subclass, weights = ~weights, data = m.data.i)
+    1 - level Cluster Sampling design (with replacement)
+    With (76) clusters.
+    survey::svydesign(ids = ~subclass, weights = ~weights, data = m.data.i)
+
+``` r
+svycoxph_results
+```
+
+          term estimate std.error
+    1 exposure 1.069502 0.1891482
