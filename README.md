@@ -4,9 +4,9 @@
 
 ## svycoxph in ps-matched datasets after multiple imputation
 
-This is a reproducible example on how to use svycoxph in combination
-with multiple imputation and propensity score matching using a `mimids`
-object from the MatchThem package.
+This is a reproducible example on how to use `coxph` and `svycoxph` in
+combination with multiple imputation and propensity score matching using
+a `mimids` object from the MatchThem package.
 
 Load packages:
 
@@ -64,7 +64,7 @@ data_matched <- matchthem(
 We now want to compare treatment effect estimates for `exposure` when
 computed (a) using `coxph` (survival package) and (b) `svycoxph` (survey
 package). More information on estimating treatment effects after
-matching/weighting is explained in
+matching/weighting is provided in
 <https://kosukeimai.github.io/MatchIt/articles/estimating-effects.html#survival-outcomes>
 
 \(a\) `coxph`
@@ -75,7 +75,9 @@ coxph_results <- with(
   data = data_matched,
   expr = coxph(formula = Surv(time, status) ~ exposure, 
                weights = weights, 
-               robust = TRUE)
+               cluster = subclass,
+               robust = TRUE
+               )
   ) |> 
   pool() |> 
   tidy(exponentiate = TRUE) |> 
@@ -85,17 +87,15 @@ coxph_results
 ```
 
           term estimate std.error
-    1 exposure 1.069502 0.1906643
+    1 exposure 1.069502 0.1878997
 
 \(b\) `svycoxph`
 
 ``` r
-# coxph result
+# svycoxph result
 svycoxph_results <- with(
   data = data_matched,
-  expr = svycoxph(formula = Surv(time, status) ~ exposure),
-  weights = weights, 
-  robust = TRUE
+  expr = svycoxph(formula = Surv(time, status) ~ exposure)
   ) |> 
   pool() |> 
   tidy(exponentiate = TRUE, conf.int = TRUE) |> 
